@@ -1,118 +1,180 @@
-import { Image, KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import React, { useState } from 'react'
-import { MaterialIcons } from '@expo/vector-icons';
-import { FontAwesome } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text as RNText,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'react-native';
+import { showToast } from '../utilities/toast';
+import AuthService from '../api/auth-service/auth-service';
+import { Entypo } from '@expo/vector-icons';
 
 const LoginScreen = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const navigation = useNavigation();
-    StatusBar.setBackgroundColor('lightgrey');
-    return (
-        <View style={{
-            flex: 1,
-            backgroundColor: 'white',
-            alignItems: 'center',
-            marginTop: StatusBar.currentHeight,
-        }}>
-            <View style={{ marginTop: 50 }}>
-                <Image style={{
-                    width: 150,
-                    height: 100,
-                    resizeMode: 'contain',
-                }}
-                    source={{ uri: "https://freelogopng.com/images/all_img/1688663386threads-logo-transparent.png" }}
-                />
-            </View>
-            <KeyboardAvoidingView>
-                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 17, fontWeight: 'bold', marginTop: 25 }}>Login to Your Account</Text>
-                </View>
-                <View style={{ marginTop: 40 }}>
-                    <View style={{
-                        flexDirection: 'row',
-                        gap: 5,
-                        alignItems: 'center',
-                        borderColor: '#D0D0D0',
-                        borderWidth: 1,
-                        paddingVertical: 5,
-                        borderRadius: 5,
-                    }}>
-                        <MaterialIcons style={{ marginLeft: 10 }} name="email" size={24} color="gray" />
-                        <TextInput
-                            value={email}
-                            onChangeText={(text) => setEmail(text)}
-                            placeholderTextColor={'gray'}
-                            style={{ color: 'gray', marginVertical: 10, width: '75%', fontSize: email ? 16 : 16 }} placeholder='Enter Your Email' />
-                    </View>
-                </View>
-                <View style={{ marginTop: 30 }}>
-                    <View style={{
-                        flexDirection: 'row',
-                        gap: 5,
-                        alignItems: 'center',
-                        borderColor: '#D0D0D0',
-                        borderWidth: 1,
-                        paddingVertical: 5,
-                        borderRadius: 5,
-                    }}>
-                        <FontAwesome style={{ marginLeft: 10 }} name="lock" size={24} color="gray" />
-                        <TextInput
-                            secureTextEntry={true}
-                            value={password}
-                            onChangeText={(text) => setPassword(text)}
-                            placeholderTextColor={'gray'}
-                            style={{ color: 'gray', marginVertical: 10, width: '75%', fontSize: password ? 16 : 16 }} placeholder='Enter Your Password' />
-                    </View>
-                    <View style={{ flexDirection: 'row', marginTop: 12, alignItems: 'center', justifyContent: 'space-between', }}>
-                        <Text>Keep me logged in</Text>
-                        <Text style={{ fontWeight: '500', color: '#007FFF', }}>Forgot Password</Text>
-                    </View>
-                </View>
-                <View style={{ marginTop: 45 }} />
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const navigation = useNavigation();
+  const [usernameError, setUsernameError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  StatusBar.setBackgroundColor('lightgrey');
 
-                <Pressable style={{
-                    width: 200,
-                    marginTop: 10,
-                    marginLeft: 'auto',
-                    marginRight: 'auto',
-                    backgroundColor: 'black',
-                    padding: 15,
-                    marginTop: 20,
-                    borderRadius: 6,
-                }}>
-                    <Text style={{
-                        color: 'white',
-                        textAlign: 'center',
-                        fontWeight: 'bold',
-                        fontSize: 16,
-                    }}>Login</Text>
-                </Pressable>
+  const validateInputs = () => {
+    let isValid = true;
 
-                <Pressable onPress={() => navigation.navigate('Register')} style={{ marginTop: 10 }}>
-                    <Text style={{
-                        textAlign: 'center',
-                        fontSize: 16,
-                    }}>Don't have an account? Sign Up</Text>
-                </Pressable>
-            </KeyboardAvoidingView>
+    if (username.length == 0) {
+      setUsernameError('Username must be at least 3 characters.');
+      isValid = false;
+    } else {
+      setUsernameError('');
+    }
+
+    if (password.length == 0) {
+      setPasswordError('Password must be at least 6 characters.');
+      isValid = false;
+    } else {
+      setPasswordError('');
+    }
+
+    return isValid;
+  };
+
+  const handleLogin = async () => {
+    if (validateInputs()) {
+      showToast('info', 'Logging in...');
+      try {
+        const response = await fetch('https://xoftworld.com/Users/UserLogin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            UserName: username,
+            Password: password,
+          }),
+        });
+
+        if (response.ok) {
+          const user = await response.json();
+          if (user?.BranchId > 0) {
+            console.log(user.BranchId);
+            AuthService.setUser(user);
+            console.log(`login ${AuthService.getUser(user)?.BranchId}`);
+
+            showToast('success', 'Login successful!');
+            navigation.navigate('Home');
+          } else {
+            showToast('error', `${user?.Message}`);
+          }
+        } else {
+          console.error('Login failed');
+          showToast(
+            'error',
+            'Invalid username or password. Please try again.'
+          );
+        }
+      } catch (error) {
+        console.error('Error during login:', error);
+        showToast('error', 'An error occurred. Please try again later.');
+      }
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.logoContainer}><Entypo name="login" size={70} color="black" /></View>
+      <View style={styles.formContainer}>
+        <RNText style={styles.title}>Login to Your Account</RNText>
+        <TextInput
+          value={username}
+          onChangeText={(text) => setUsername(text)}
+          placeholder="Enter Your Email"
+          style={styles.input}
+        />
+        {usernameError ? <RNText style={styles.errorText}>{usernameError}</RNText> : null}
+        <TextInput
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+          placeholder="Enter Your Password"
+          secureTextEntry={true}
+          style={styles.input}
+        />
+        {passwordError ? <RNText style={styles.errorText}>{passwordError}</RNText> : null}
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <RNText style={styles.buttonText}>LOGIN</RNText>
+        </TouchableOpacity>
+        <View style={styles.signupContainer}>
+          <RNText>Don't have an account?</RNText>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <RNText style={styles.signupText}>Sign Up</RNText>
+          </TouchableOpacity>
         </View>
+      </View>
+    </View>
+  );
+};
 
-    )
-}
+export default LoginScreen;
 
-export default LoginScreen
-
-const styles = StyleSheet.create({})
-
-{/* // <View style={{
-        // //     flex: 1,
-        // //     alignItems: 'center',
-        // //     justifyContent: 'center',
-        // // }}>
-        // //     <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        // //         <Text>Navigate to Register Screen</Text>
-        // //     </TouchableOpacity>
-        // // </View> */}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  logoContainer: {
+    marginTop: 50,
+  },
+  formContainer: {
+    width: '80%',
+    marginTop: 30,
+  },
+  title: {
+    textAlign: 'center',
+    marginBottom: 25,
+    fontSize: 17,
+    fontWeight: 'bold',
+  },
+  input: {
+    height: 40,
+    borderColor: '#D0D0D0',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 10,
+    borderRadius: 5,
+    color: 'gray',
+    marginVertical: 10,
+    width: 300,
+    fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
+  },
+  loginButton: {
+    backgroundColor: 'black',
+    padding: 15,
+    borderRadius: 6,
+    marginTop: 30,
+    width: 200,
+    alignSelf: 'center', // This centers the button in its parent container
+  },
+  buttonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textTransform: 'uppercase',
+  },
+  signupContainer: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  signupText: {
+    color: '#007FFF',
+    fontWeight: '600',
+    marginLeft: 5,
+  },
+});
