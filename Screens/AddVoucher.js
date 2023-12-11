@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Text, Modal, FlatList, StatusBar } from 'react-native';
-import axios from 'axios'; // if using Axios
+import { View, TextInput, ScrollView, Button, StyleSheet, Alert, TouchableOpacity, Text, Modal, FlatList, StatusBar } from 'react-native';
 import AuthService from '../api/auth-service/auth-service';
+import CustomHeader from '../utilities/navbar';
+import { FontAwesome } from '@expo/vector-icons';
+import { colors, defaultValues } from '../utilities/Constants/constant';
 
 const AddVoucher = ({ route }) => {
     const [selectedOption, setSelectedOption] = useState(0);
@@ -22,24 +24,33 @@ const AddVoucher = ({ route }) => {
 
         const userData = AuthService.getUser(); // Replace with the actual function to get user data
         setUser(userData);
-
-        // Function to fetch posting accounts
         const fetchPostingAccounts = async () => {
             try {
-                console.log(AuthService.getUser()?.OrgId);
-                // Replace with your API endpoint
-                const response = await axios.get(`https://xoftworld.com/Accounts/GetPostingAccountList?orgId=${AuthService.getUser()?.OrgId}`);
-                const accounts = response.data.map(account => ({
+                const token = AuthService.getUser().Token; // Get the JWT token from AuthService
+
+                const response = await fetch(`${defaultValues.baseUrl}/Accounts/GetPostingAccountList?orgId=${AuthService.getUser()?.OrgId}`, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Add the Bearer token to the Authorization header
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status ${response.status}`);
+                }
+
+                const accounts = await response.json();
+
+                setPostingAccounts(accounts.map(account => ({
                     label: account.PostingAccountName, // Adjust according to your API response
-                    value: account.PostingAccountId,   // Adjust according to your API response
-                }));
-                setPostingAccounts(accounts);
+                    value: account.PostingAccountId, // Adjust according to your API response
+                })));
             } catch (error) {
                 console.error('Error fetching posting accounts:', error);
                 Alert.alert("Error", "Failed to fetch posting accounts");
             }
         };
-
         fetchPostingAccounts();
     }, [route.params]);
 
@@ -55,21 +66,24 @@ const AddVoucher = ({ route }) => {
                 animationType="slide"
                 onRequestClose={() => setPickerVisible(false)}
             >
-                <TextInput
-                    style={styles.searchInput}
-                    onChangeText={setSearchText}
-                    value={searchText}
-                    placeholder="Search Accounts"
-                />
-                <FlatList
-                    data={filteredAccounts}
-                    keyExtractor={item => item.value.toString()}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => handleSelect(item)}>
-                            <Text style={styles.listItem}>{item.label}</Text>
-                        </TouchableOpacity>
-                    )}
-                />
+                <View style={styles.modalContent}>
+                    <TextInput
+                        style={styles.searchInput}
+                        onChangeText={setSearchText}
+                        value={searchText}
+                        placeholder="Search Accounts"
+                        placeholderTextColor="#A0A0A0"
+                    />
+                    <FlatList
+                        data={filteredAccounts}
+                        keyExtractor={item => item.value.toString()}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => handleSelect(item)}>
+                                <Text style={styles.listItemText}>{item.label}</Text>
+                            </TouchableOpacity>
+                        )}
+                    />
+                </View>
             </Modal>
         );
     };
@@ -84,11 +98,13 @@ const AddVoucher = ({ route }) => {
     const handleSubmit = async () => {
         if (numberInput > 0 && selectedOption > 0) {
             try {
+                const token = AuthService.getUser().Token;
                 // Replace 'YOUR_API_ENDPOINT' with your actual API endpoint
-                const response = await fetch('https://xoftworld.com/Accounts/AddVoucherTransaction', {
+                const response = await fetch(`${defaultValues.baseUrl}/Accounts/AddVoucherTransaction`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
                     },
                     body: JSON.stringify({
                         Id: 0,
@@ -131,120 +147,124 @@ const AddVoucher = ({ route }) => {
             setSelectedOptionLabel(null);
         }
     };
-
     return (
-        <View style={styles.container}>
-            <TouchableOpacity onPress={() => setPickerVisible(true)} style={styles.pickerTrigger}>
-                <Text>{selectedOptionLabel || "Select Account"}</Text>
-                {/* You can add a down arrow icon here if needed */}
-            </TouchableOpacity>
+        <ScrollView>
+            <View style={styles.container}>
+                <CustomHeader title={route.params?.title} showBackButton={true} />
 
-            {renderPicker()}
-            <TextInput
-                style={styles.input}
-                onChangeText={setNumberInput}
-                value={numberInput}
-                placeholder="Enter a number"
-                keyboardType="numeric"
-            />
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-                    <Text style={styles.buttonText}>Submit</Text>
+                <TouchableOpacity onPress={() => setPickerVisible(true)} style={styles.pickerTrigger}>
+                    <Text style={styles.pickerTriggerText}>{selectedOptionLabel || "Select Account"}</Text>
+                    <FontAwesome name="caret-down" size={20} color={colors.dar} />
                 </TouchableOpacity>
+
+                {renderPicker()}
+
+                <TextInput
+                    style={styles.input}
+                    onChangeText={setNumberInput}
+                    value={numberInput.toString()}
+                    placeholder="Enter a number"
+                    keyboardType="numeric"
+                    placeholderTextColor="#A0A0A0"
+                />
+
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity onPress={handleSubmit} style={styles.button}>
+                        <Text style={styles.buttonText}>Submit</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-        backgroundColor: '#f5f5f5', // You can adjust the background color
-        marginTop: StatusBar.currentHeight
+        paddingTop: StatusBar.currentHeight,
+        backgroundColor: colors.neutral, // Light gray background color
+        alignItems: 'center', // Center content horizontally
+        paddingVertical: 20, // Add vertical padding
     },
     pickerTrigger: {
         width: '80%',
         padding: 10,
-        borderWidth: 1,
-        borderColor: 'gray',
+        marginTopTop: 10,
+        backgroundColor: colors.neutral, // Light background color
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        // Additional styling...
+        flexDirection: 'row', // Align text and icon horizontally
+    },
+    pickerTriggerText: {
+        flex: 1, // Allow text to grow to the right
+        color: colors.dar, // Black text color
     },
     input: {
         fontSize: 16,
         padding: 10,
         borderWidth: 1,
-        borderColor: 'gray',
-        borderRadius: 10, // Rounded corners
-        backgroundColor: '#fff',
-        color: 'black',
+        borderColor: '#D1D1D1', // Light gray border color
+        borderRadius: 10,
+        backgroundColor: colors.light,
+        color: colors.dar,
         width: '80%',
         marginBottom: 20,
-        shadowColor: '#000',
+        shadowColor: colors.dar,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
-        elevation: 5, marginTop: 10
+        elevation: 5,
     },
     buttonContainer: {
         width: '80%',
-        borderRadius: 10, // Rounded corners
+        borderRadius: 10,
         overflow: 'hidden',
     },
     button: {
-        backgroundColor: 'green', // Green color
+        backgroundColor: colors.primary,
         padding: 15,
         alignItems: 'center',
-        shadowColor: '#000',
+        shadowColor: colors.dar,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
     },
     buttonText: {
-        color: '#fff',
+        color: colors.light,
         fontSize: 16,
         fontWeight: 'bold',
     },
-    viewContainer: {
-        width: '80%', // Same as other inputs
-        alignSelf: 'center', // Center align the picker
-    },
     modalContent: {
         padding: 20,
-        margin: 20, // Add some margin around the modal
-        backgroundColor: 'white', // Background color for the modal content
-        borderRadius: 10, // Rounded corners for the modal
-        borderWidth: 1, // Border for the modal
-        borderColor: 'gray', // Border color
-        // Add shadow for 3D effect (optional)
-        shadowColor: '#000',
+        margin: 20,
+        backgroundColor: colors.light,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#D1D1D1',
+        shadowColor: colors.dar,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
     },
-    listItem: {
-        padding: 12, // Increased padding for larger item size
+    listItemText: {
+        padding: 12,
         borderBottomWidth: 1,
-        borderBottomColor: 'gray',
-        fontSize: 18, // Increased text size
-        // Additional styles if needed
+        borderBottomColor: '#D1D1D1',
+        fontSize: 18,
+        color: colors.dar,
     },
     searchInput: {
         borderWidth: 1,
-        borderColor: 'gray',
-        borderRadius: 10, // Rounded corners
-        padding: 12, // Increased padding for larger size
-        fontSize: 16, // Larger text size
+        borderColor: '#D1D1D1',
+        borderRadius: 10,
+        padding: 12,
+        fontSize: 16,
         marginBottom: 20,
-        width: '100%', // Adjust width as needed
-        // Additional styles if needed
+        width: '100%',
+        color: colors.dar,
     },
 });
 

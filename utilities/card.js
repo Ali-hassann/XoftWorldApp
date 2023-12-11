@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors } from './Constants/constant';
 
 const Card = ({ title, onPress }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
@@ -11,7 +12,7 @@ const styles = StyleSheet.create({
   card: {
     width: '45%', // Adjust as needed
     height: 150, // Adjust as needed
-    backgroundColor: '#fff',
+    backgroundColor: colors.primary,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -23,9 +24,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.39,
     shadowRadius: 8.30,
     elevation: 13,
+    backgroundColor: colors.primary
   },
   cardTitle: {
     // Add your text styling here
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: colors.light
   }
 });
 

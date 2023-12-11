@@ -11,6 +11,7 @@ import { StatusBar } from 'react-native';
 import { showToast } from '../utilities/toast';
 import AuthService from '../api/auth-service/auth-service';
 import { Entypo } from '@expo/vector-icons';
+import { colors, defaultValues } from '../utilities/Constants/constant';
 
 const LoginScreen = () => {
   const [username, setUsername] = useState('');
@@ -44,7 +45,7 @@ const LoginScreen = () => {
     if (validateInputs()) {
       showToast('info', 'Logging in...');
       try {
-        const response = await fetch('https://xoftworld.com/Users/UserLogin', {
+        const response = await fetch(`${defaultValues.baseUrl}/Users/UserLogin`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -83,7 +84,7 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.logoContainer}><Entypo name="login" size={70} color="black" /></View>
+      <View style={styles.logoContainer}><Entypo name="login" size={70} color={colors.dar} /></View>
       <View style={styles.formContainer}>
         <RNText style={styles.title}>Login to Your Account</RNText>
         <TextInput
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.light,
   },
   logoContainer: {
     marginTop: 50,
@@ -143,17 +144,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingLeft: 10,
     borderRadius: 5,
-    color: 'gray',
+    color: colors.dar,
     marginVertical: 10,
     width: 300,
     fontSize: 16,
   },
   errorText: {
-    color: 'red',
+    color: colors.danger,
     marginBottom: 10,
   },
   loginButton: {
-    backgroundColor: 'black',
+    backgroundColor: colors.dar,
     padding: 15,
     borderRadius: 6,
     marginTop: 30,
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center', // This centers the button in its parent container
   },
   buttonText: {
-    color: 'white',
+    color: colors.light,
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 16,
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   signupText: {
-    color: '#007FFF',
+    color: colors.primary,
     fontWeight: '600',
     marginLeft: 5,
   },

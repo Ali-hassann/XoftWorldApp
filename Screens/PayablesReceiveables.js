@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import AuthService from '../api/auth-service/auth-service';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, StatusBar, TextInput, Button } from 'react-native';
+import CustomHeader from '../utilities/navbar';
+import { defaultValues } from '../utilities/Constants/constant';
 
 const PayablesReceiveables = ({ route }) => {
     const [data, setData] = useState([]); // State to store your data
     const [configList, setConfigList] = useState([]); // State to store your data
     const [subcategoryId, setSubcategory] = useState(0); // State to store your data
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Set eventType once when route.params changes
     const eventType = route.params?.eventType || 0;
@@ -19,7 +22,7 @@ const PayablesReceiveables = ({ route }) => {
         // After setting configList, check the subcategory
         if (configList.length > 0 && eventType) {
             const subcategory = configList.find(e =>
-                eventType === 1 ? e.ColumnName === "Creditors" : e.ColumnName === "Debtors"
+                eventType === 1 ? e.ColumnName === "Creditors" : eventType === 2 ? e.ColumnName === "Debtors" : eventType === 3 ? e.ColumnName === "Expense" : e.ColumnName === "Banks"
             )?.PostingAccountId ?? 0;
 
             setSubcategory(subcategory);
@@ -33,9 +36,37 @@ const PayablesReceiveables = ({ route }) => {
         }
     }, [subcategoryId]);
 
+    const renderHeader = () => {
+        return (
+            <>
+                <TextInput
+                    style={styles.searchInput}
+                    value={searchQuery}
+                    onChangeText={text => setSearchQuery(text)}
+                    placeholder="Search Posting Account"
+                    autoFocus={true}
+                />
+                {/* <FontAwesome name="search" size={24} color="black" /> */}
+            </>
+        );
+    };
+
     const getConfigData = async () => {
         try {
-            const response = await fetch(`https://xoftworld.com/Accounts/GetConfigurationList?OrgId=${AuthService.getUser().OrgId}&BranchId=${AuthService.getUser().BranchId}`);
+            const token = AuthService.getUser().Token; // Get the JWT token from AuthService
+
+            const response = await fetch(`${defaultValues.baseUrl}/Accounts/GetConfigurationList?OrgId=${AuthService.getUser().OrgId}&BranchId=${AuthService.getUser().BranchId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`, // Add the Bearer token to the Authorization header
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('API call failed with status ' + response.status);
+            }
+
             const configData = await response.json();
             setConfigList(configData);
         } catch (error) {
@@ -45,10 +76,12 @@ const PayablesReceiveables = ({ route }) => {
 
     const fetchData = async () => {
         try {
-            const response = await fetch('https://xoftworld.com/Accounts/PartyBalances', {
+            const token = AuthService.getUser().Token; // Get the JWT token from AuthService
+            const response = await fetch(`${defaultValues.baseUrl}/Accounts/PartyBalances`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     BranchId: AuthService.getUser().BranchId,
@@ -68,34 +101,37 @@ const PayablesReceiveables = ({ route }) => {
         }
     };
 
-    const ListItem = ({ title, description, balance }) => (
+    const ListItem = ({ title, balance }) => (
         <View style={styles.itemContainer}>
             <View style={styles.iconAndText}>
                 {/* <View style={styles.icon} /> */}
                 <Ionicons style={{ marginRight: 5 }} name="person-sharp" size={20} color="gray" />
                 <View style={styles.textContainer}>
                     <Text style={styles.title}>{title}</Text>
-                    <Text>{description}</Text>
                 </View>
             </View>
-            <TouchableOpacity style={styles.followButton}>
-                <Text style={styles.followButtonText}>{balance}</Text>
-            </TouchableOpacity>
+            <Text style={styles.followButtonText}>{balance}</Text>
         </View>
     );
 
     return (
         <View style={styles.container}>
+            <CustomHeader title={route.params?.title} showBackButton={true} />
             <FlatList
-                data={data}
+                data={data.filter(item =>
+                    item.PostingAccountName.toLowerCase().includes(searchQuery.toLowerCase())
+                )}
+                ListHeaderComponent={renderHeader}
+
+                StickyHeaderComponent={renderHeader}
                 keyExtractor={(item) => item.PostingAccountId.toString()}
                 renderItem={({ item }) => (
                     <ListItem
                         title={item.PostingAccountName}
-                        description={item.SubCategoryName}
                         balance={item.ClosingBalance}
                     />
                 )}
+                keyboardShouldPersistTaps="always" // This prop prevents keyboard from closing
             />
         </View>
     );
@@ -134,15 +170,18 @@ const styles = StyleSheet.create({
     title: {
         fontWeight: 'bold',
     },
-    followButton: {
-        backgroundColor: '#007AFF', // Follow button color
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 15,
-    },
+
     followButtonText: {
-        color: '#fff',
+
         fontWeight: 'bold',
+    },
+    searchInput: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        paddingLeft: 8,
+        margin: 10,
+        borderRadius: 5,
     },
 });
 

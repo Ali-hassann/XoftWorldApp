@@ -1,30 +1,53 @@
-import React from 'react';
-import { TouchableOpacity, Text } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { colors } from './Constants/constant';
 
-const CustomTopNavigation = ({ title, showBackButton = true }) => {
+function CustomHeader({ title, showBackButton }) {
   const navigation = useNavigation();
+  const [menuVisible, setMenuVisible] = useState(false);
 
-  const handleLogout = () => {
-    // Add your logout logic here
-    console.log('Logout');
+  const handleBack = () => {
+    if (showBackButton) {
+      navigation.goBack();
+    }
   };
 
-  return {
-    title: title,
-    headerLeft: showBackButton
-      ? () => (
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text>Back</Text>
-          </TouchableOpacity>
-        )
-      : undefined,
-    headerRight: () => (
-      <TouchableOpacity onPress={handleLogout}>
-        <Text>Logout</Text>
-      </TouchableOpacity>
-    ),
+  const toggleMenu = () => {
+    setMenuVisible(!menuVisible);
   };
-};
 
-export default CustomTopNavigation;
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        // justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        height: 60,
+        backgroundColor: colors.neutral, // Light gray background with subtle gradient
+        // Add gradient:
+        // backgroundImage: LinearGradientColors,
+      }}
+    >
+      {showBackButton && (
+        <TouchableOpacity
+          accessibilityLabel="Go back"
+          onPress={handleBack}
+          style={{ marginRight: 16 }}
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.dark_alt} />
+        </TouchableOpacity>
+      )}
+      <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.dark_alt }}>{title}</Text>
+
+      {/* <Image
+    style={{ width: 30, height: 30 }}
+    source={require('./app-icon.png')}
+  /> */}
+    </View>
+  );
+}
+
+export default CustomHeader;
