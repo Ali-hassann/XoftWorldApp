@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     title: {
-        fontWeight: 'bold',
+        fontWeight: '300',
     },
 
     followButtonText: {

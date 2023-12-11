@@ -84,7 +84,7 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.logoContainer}><Entypo name="login" size={70} color={colors.dar} /></View>
+      <View style={styles.logoContainer}><Entypo name="login" size={70} color={colors.primary} /></View>
       <View style={styles.formContainer}>
         <RNText style={styles.title}>Login to Your Account</RNText>
         <TextInput
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   loginButton: {
-    backgroundColor: colors.dar,
+    backgroundColor: colors.primary,
     padding: 15,
     borderRadius: 6,
     marginTop: 30,

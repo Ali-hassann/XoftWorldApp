@@ -148,46 +148,61 @@ const AddVoucher = ({ route }) => {
         }
     };
     return (
-        <ScrollView>
+        <View>
             <View style={styles.container}>
                 <CustomHeader title={route.params?.title} showBackButton={true} />
 
-                <TouchableOpacity onPress={() => setPickerVisible(true)} style={styles.pickerTrigger}>
-                    <Text style={styles.pickerTriggerText}>{selectedOptionLabel || "Select Account"}</Text>
-                    <FontAwesome name="caret-down" size={20} color={colors.dar} />
-                </TouchableOpacity>
-
-                {renderPicker()}
-
-                <TextInput
-                    style={styles.input}
-                    onChangeText={setNumberInput}
-                    value={numberInput.toString()}
-                    placeholder="Enter a number"
-                    keyboardType="numeric"
-                    placeholderTextColor="#A0A0A0"
-                />
-
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-                        <Text style={styles.buttonText}>Submit</Text>
-                    </TouchableOpacity>
-                </View>
             </View>
-        </ScrollView>
+            <View style={styles.mainContainer}>
+                <ScrollView>
+
+                    <TouchableOpacity onPress={() => setPickerVisible(true)} style={styles.pickerTrigger}>
+                        <Text style={styles.pickerTriggerText}>{selectedOptionLabel || "Select Account"}</Text>
+                        <FontAwesome name="caret-down" size={20} color={colors.dar} />
+                    </TouchableOpacity>
+
+                    {renderPicker()}
+
+                    <TextInput
+                        style={styles.input}
+                        onChangeText={setNumberInput}
+                        value={numberInput.toString()}
+                        placeholder="Enter a number"
+                        keyboardType="numeric"
+                        placeholderTextColor="#A0A0A0"
+                    />
+
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity onPress={handleSubmit} style={styles.button}>
+                            <Text style={styles.buttonText}>Submit</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </View>
+        </View >
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         paddingTop: StatusBar.currentHeight,
-        backgroundColor: colors.neutral, // Light gray background color
+        // backgroundColor: colors.neutral, // Light gray background color
+        // alignItems: 'center', // Center content horizontally
+        // paddingVertical: 20, // Add vertical padding
+    },
+    mainContainer: {
+        width: '100%',
+        paddingTop: 50,
+        paddingHorizontal: 20,
+        alignContent: 'center',
+        // paddingTop: StatusBar.currentHeight,
+        // backgroundColor: colors.neutral, // Light gray background color
         alignItems: 'center', // Center content horizontally
-        paddingVertical: 20, // Add vertical padding
+        // paddingVertical: 20, // Add vertical padding
+        flexDirection: 'row-reverse'
     },
     pickerTrigger: {
-        width: '80%',
+        width: '100%',
         padding: 10,
         marginTopTop: 10,
         backgroundColor: colors.neutral, // Light background color
@@ -208,16 +223,17 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         backgroundColor: colors.light,
         color: colors.dar,
-        width: '80%',
+        width: '100%',
         marginBottom: 20,
         shadowColor: colors.dar,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+        marginTop:20,
     },
     buttonContainer: {
-        width: '80%',
+        width: '100%',
         borderRadius: 10,
         overflow: 'hidden',
     },
@@ -250,18 +266,18 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     listItemText: {
-        padding: 12,
+        padding: 8,
         borderBottomWidth: 1,
         borderBottomColor: '#D1D1D1',
-        fontSize: 18,
+        fontSize: 15,
         color: colors.dar,
     },
     searchInput: {
         borderWidth: 1,
         borderColor: '#D1D1D1',
         borderRadius: 10,
-        padding: 12,
-        fontSize: 16,
+        padding: 10,
+        fontSize: 15,
         marginBottom: 20,
         width: '100%',
         color: colors.dar,

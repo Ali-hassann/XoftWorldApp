@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors } from './Constants/constant';
+import { Ionicons } from '@expo/vector-icons';
 
-const Card = ({ title, onPress }) => (
+const Card = ({ title, onPress, icon }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
+    <Ionicons name={icon} size={28} color={colors.light} />
     <Text style={styles.cardTitle}>{title}</Text>
   </TouchableOpacity>
 );
@@ -30,7 +32,8 @@ const styles = StyleSheet.create({
     // Add your text styling here
     fontSize: 15,
     fontWeight: 'bold',
-    color: colors.light
+    color: colors.light,
+    paddingTop: 10,
   }
 });
 
