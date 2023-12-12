@@ -12,6 +12,7 @@ import { showToast } from '../utilities/toast';
 import AuthService from '../api/auth-service/auth-service';
 import { Entypo } from '@expo/vector-icons';
 import { colors, defaultValues } from '../utilities/Constants/constant';
+import Loader from '../utilities/loader'; // Import your Loader component
 
 const LoginScreen = () => {
   const [username, setUsername] = useState('');
@@ -19,6 +20,8 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   StatusBar.setBackgroundColor('lightgrey');
 
   const validateInputs = () => {
@@ -41,10 +44,17 @@ const LoginScreen = () => {
     return isValid;
   };
 
+
+  const loader = (value) => {
+    setIsLoading(value);
+  };
+
   const handleLogin = async () => {
     if (validateInputs()) {
+      loader(true);
       showToast('info', 'Logging in...');
       try {
+        Loader(true);
         const response = await fetch(`${defaultValues.baseUrl}/Users/UserLogin`, {
           method: 'POST',
           headers: {
@@ -59,10 +69,8 @@ const LoginScreen = () => {
         if (response.ok) {
           const user = await response.json();
           if (user?.BranchId > 0) {
-            console.log(user.BranchId);
             AuthService.setUser(user);
-            console.log(`login ${AuthService.getUser(user)?.BranchId}`);
-
+            loader(false);
             showToast('success', 'Login successful!');
             navigation.navigate('Home');
           } else {
@@ -70,16 +78,22 @@ const LoginScreen = () => {
           }
         } else {
           console.error('Login failed');
+          loader(false);
           showToast(
             'error',
             'Invalid username or password. Please try again.'
           );
         }
       } catch (error) {
+        loader(false);
         console.error('Error during login:', error);
         showToast('error', 'An error occurred. Please try again later.');
       }
     }
+    setTimeout(() => {
+      // When the API call is complete, hide the loader
+      loader(false);
+    }, 5000); // Simulated 2-second delay
   };
 
   return (
@@ -111,6 +125,7 @@ const LoginScreen = () => {
             <RNText style={styles.signupText}>Sign Up</RNText>
           </TouchableOpacity>
         </View>
+      <Loader visible={isLoading} />
       </View>
     </View>
   );

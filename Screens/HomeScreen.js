@@ -8,16 +8,16 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.container}>
             <CustomHeader title="Home" showBackButton={false} />
             <View style={styles.row}>
-                <Card style={styles.card} title="Payables" icon="analytics-sharp" onPress={() => navigation.navigate('PayablesReceiveables', { eventType: 1, title: 'Payables' })} />
-                <Card title="Receiveables" icon="archive" onPress={() => navigation.navigate('PayablesReceiveables', { eventType: 2, title: 'Receiveables' })} />
+                <Card style={styles.card} title="Payables" icon="analytics-sharp" desc="Venders" onPress={() => navigation.navigate('PayablesReceiveables', { eventType: 1, title: 'Payables' })} />
+                <Card title="Receiveables" icon="archive" desc="Customers" onPress={() => navigation.navigate('PayablesReceiveables', { eventType: 2, title: 'Receiveables' })} />
             </View>
             <View style={styles.row}>
-                <Card title="Expenses" icon="bar-chart" onPress={() => navigation.navigate('PayablesReceiveables', { eventType: 3, title: 'Expenses' })} />
-                <Card title="Banks" icon="ios-pie-chart" onPress={() => navigation.navigate('PayablesReceiveables', { eventType: 4, title: 'Banks' })} />
+                <Card title="Expenses" icon="bar-chart" desc="" onPress={() => navigation.navigate('PayablesReceiveables', { eventType: 3, title: 'Expenses' })} />
+                <Card title="Banks" icon="ios-pie-chart" desc="" onPress={() => navigation.navigate('PayablesReceiveables', { eventType: 4, title: 'Banks' })} />
             </View>
             <View style={styles.row}>
-                <Card title="Cash Receive" icon="archive" onPress={() => navigation.navigate('Voucher', { eventType: 1, title: 'Cash Receive' })} />
-                <Card title="Cash Pay" icon="md-send-sharp" onPress={() => navigation.navigate('Voucher', { eventType: 2, title: 'Cash Pay' })} />
+                <Card title="Receipt Voucher" desc="" icon="archive" onPress={() => navigation.navigate('Voucher', { eventType: 1, title: 'Cash Receive' })} />
+                <Card title="Payment Voucher" desc="" icon="md-send-sharp" onPress={() => navigation.navigate('Voucher', { eventType: 2, title: 'Cash Pay' })} />
             </View>
         </View>
     );

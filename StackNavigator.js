@@ -51,6 +51,7 @@ const StackNavigator = () => {
             <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Voucher" component={AddVoucher} options={{ headerShown: false }} />
             <Stack.Screen name="PayablesReceiveables" component={PayablesReceiveables} options={{ headerShown: false }} />
+            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           </>
         ) : (
           // User is not authenticated, navigate to the Login and Register screens

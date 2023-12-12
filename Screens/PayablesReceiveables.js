@@ -4,12 +4,14 @@ import AuthService from '../api/auth-service/auth-service';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, StatusBar, TextInput, Button } from 'react-native';
 import CustomHeader from '../utilities/navbar';
 import { defaultValues } from '../utilities/Constants/constant';
+import Loader from '../utilities/loader';
 
 const PayablesReceiveables = ({ route }) => {
     const [data, setData] = useState([]); // State to store your data
     const [configList, setConfigList] = useState([]); // State to store your data
     const [subcategoryId, setSubcategory] = useState(0); // State to store your data
     const [searchQuery, setSearchQuery] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     // Set eventType once when route.params changes
     const eventType = route.params?.eventType || 0;
@@ -36,6 +38,10 @@ const PayablesReceiveables = ({ route }) => {
         }
     }, [subcategoryId]);
 
+    const loader = (value) => {
+        setIsLoading(value);
+    };
+
     const renderHeader = () => {
         return (
             <>
@@ -53,6 +59,7 @@ const PayablesReceiveables = ({ route }) => {
 
     const getConfigData = async () => {
         try {
+            loader(true);
             const token = AuthService.getUser().Token; // Get the JWT token from AuthService
 
             const response = await fetch(`${defaultValues.baseUrl}/Accounts/GetConfigurationList?OrgId=${AuthService.getUser().OrgId}&BranchId=${AuthService.getUser().BranchId}`, {
@@ -64,18 +71,22 @@ const PayablesReceiveables = ({ route }) => {
             });
 
             if (!response.ok) {
+                loader(false);
                 throw new Error('API call failed with status ' + response.status);
             }
 
             const configData = await response.json();
             setConfigList(configData);
+            loader(false);
         } catch (error) {
+            loader(false);
             console.error('Error fetching config data:', error);
         }
     };
 
     const fetchData = async () => {
         try {
+            loader(true);
             const token = AuthService.getUser().Token; // Get the JWT token from AuthService
             const response = await fetch(`${defaultValues.baseUrl}/Accounts/PartyBalances`, {
                 method: 'POST',
@@ -91,14 +102,22 @@ const PayablesReceiveables = ({ route }) => {
             });
 
             if (!response.ok) {
+                loader(false);
                 throw new Error('API call failed with status ' + response.status);
             }
 
             const fetchData = await response.json();
             setData(fetchData);
+            loader(false);
         } catch (error) {
+            loader(false);
             console.error('Error fetching data:', error);
         }
+
+        setTimeout(() => {
+            // When the API call is complete, hide the loader
+            loader(false);
+        }, 5000); // Simulated 2-second delay
     };
 
     const ListItem = ({ title, balance }) => (
@@ -133,6 +152,7 @@ const PayablesReceiveables = ({ route }) => {
                 )}
                 keyboardShouldPersistTaps="always" // This prop prevents keyboard from closing
             />
+            <Loader visible={isLoading} />
         </View>
     );
 };

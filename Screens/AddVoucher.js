@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, ScrollView, Button, StyleSheet, Alert, TouchableOpacity, Text, Modal, FlatList, StatusBar } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, TextInput, ScrollView, KeyboardAvoidingView, Button, StyleSheet, Alert, TouchableOpacity, Text, Modal, FlatList, StatusBar } from 'react-native';
 import AuthService from '../api/auth-service/auth-service';
 import CustomHeader from '../utilities/navbar';
 import { FontAwesome } from '@expo/vector-icons';
 import { colors, defaultValues } from '../utilities/Constants/constant';
+import Loader from '../utilities/loader'; // Import your Loader component
 
 const AddVoucher = ({ route }) => {
     const [selectedOption, setSelectedOption] = useState(0);
@@ -15,6 +16,7 @@ const AddVoucher = ({ route }) => {
     const [searchText, setSearchText] = useState('');
     const [selectedOptionLabel, setSelectedOptionLabel] = useState('');
     const [user, setUser] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
 
@@ -53,6 +55,10 @@ const AddVoucher = ({ route }) => {
         };
         fetchPostingAccounts();
     }, [route.params]);
+
+    const loader = (value) => {
+        setIsLoading(value);
+    };
 
     const renderPicker = () => {
         // Filter accounts based on search text
@@ -98,6 +104,7 @@ const AddVoucher = ({ route }) => {
     const handleSubmit = async () => {
         if (numberInput > 0 && selectedOption > 0) {
             try {
+                loader(true);
                 const token = AuthService.getUser().Token;
                 // Replace 'YOUR_API_ENDPOINT' with your actual API endpoint
                 const response = await fetch(`${defaultValues.baseUrl}/Accounts/AddVoucherTransaction`, {
@@ -117,13 +124,15 @@ const AddVoucher = ({ route }) => {
                         OrgId: user.OrgId,
                     }),
                 });
-                console.log(`acc :${selectedOption} \n ${numberInput}\n ${eventType}\n ${new Date().toISOString()}`);
+                // console.log(`acc :${selectedOption} \n ${numberInput}\n ${eventType}\n ${new Date().toISOString()}`);
                 if (!response.ok) {
+                    loader(false);
                     throw new Error('API call failed with status ' + response.status);
                 }
 
                 const data = await response.json();
                 if (data) {
+                    loader(false);
                     Alert.alert("Success", "Voucher added successfully!");
                     setSelectedOption(0);
                     setNumberInput(0);
@@ -137,18 +146,20 @@ const AddVoucher = ({ route }) => {
                     setSelectedOptionLabel('');
                 }
             } catch (error) {
+                loader(false);
                 console.error('Error during API call:', error);
                 Alert.alert("Error", "Failed to add voucher");
             }
         } else {
             Alert.alert("Error", "Please enter Amount and also select person.");
             setSelectedOption(0);
+            loader(false);
             setNumberInput(0);
             setSelectedOptionLabel(null);
         }
     };
     return (
-        <View>
+        <View >
             <View style={styles.container}>
                 <CustomHeader title={route.params?.title} showBackButton={true} />
 
@@ -179,6 +190,7 @@ const AddVoucher = ({ route }) => {
                     </View>
                 </ScrollView>
             </View>
+            <Loader visible={isLoading} />
         </View >
     );
 };
@@ -191,6 +203,7 @@ const styles = StyleSheet.create({
         // paddingVertical: 20, // Add vertical padding
     },
     mainContainer: {
+        // flex:1,
         width: '100%',
         paddingTop: 50,
         paddingHorizontal: 20,
@@ -199,17 +212,24 @@ const styles = StyleSheet.create({
         // backgroundColor: colors.neutral, // Light gray background color
         alignItems: 'center', // Center content horizontally
         // paddingVertical: 20, // Add vertical padding
-        flexDirection: 'row-reverse'
+        flexDirection: 'row'
     },
     pickerTrigger: {
         width: '100%',
-        padding: 10,
+        padding: 14,
         marginTopTop: 10,
-        backgroundColor: colors.neutral, // Light background color
+        backgroundColor: colors.light, // Light background color
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row', // Align text and icon horizontally
+        borderWidth: 1,
+        borderColor: '#D1D1D1',
+        shadowColor: colors.dar,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
     pickerTriggerText: {
         flex: 1, // Allow text to grow to the right
@@ -230,7 +250,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-        marginTop:20,
+        marginTop: 20,
     },
     buttonContainer: {
         width: '100%',
