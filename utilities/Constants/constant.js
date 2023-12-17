@@ -12,5 +12,5 @@ export const colors = {
 }
 
 export const defaultValues = {
-    baseUrl: "https://main.xoftworld.com",
+    baseUrl: "https://xoftworld.com",
 };

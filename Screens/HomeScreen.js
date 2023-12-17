@@ -16,8 +16,12 @@ const HomeScreen = ({ navigation }) => {
                 <Card title="Banks" icon="ios-pie-chart" desc="" onPress={() => navigation.navigate('PayablesReceiveables', { eventType: 4, title: 'Banks' })} />
             </View>
             <View style={styles.row}>
-                <Card title="Receipt Voucher" desc="" icon="archive" onPress={() => navigation.navigate('Voucher', { eventType: 1, title: 'Cash Receive' })} />
-                <Card title="Payment Voucher" desc="" icon="md-send-sharp" onPress={() => navigation.navigate('Voucher', { eventType: 2, title: 'Cash Pay' })} />
+                <Card title="Receipt Voucher" desc="" icon="archive" onPress={() => navigation.navigate('Voucher', { eventType: 2, title: 'Receipt Voucher' })} />
+                <Card title="Payment Voucher" desc="" icon="md-send-sharp" onPress={() => navigation.navigate('Voucher', { eventType: 1, title: 'Payment Voucher' })} />
+            </View>
+            <View style={styles.row}>
+                {/* <Card title="Receipt Voucher" desc="" icon="archive" onPress={() => navigation.navigate('Voucher', { eventType: 2, title: 'Receipt Voucher' })} /> */}
+                <Card title="Sale Order" desc="" icon="md-send-sharp" onPress={() => navigation.navigate('Order', { eventType: 1, title: 'Sale Order' })} />
             </View>
         </View>
     );

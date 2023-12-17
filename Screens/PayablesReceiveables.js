@@ -134,26 +134,37 @@ const PayablesReceiveables = ({ route }) => {
     );
 
     return (
-        <View style={styles.container}>
-            <CustomHeader title={route.params?.title} showBackButton={true} />
-            <FlatList
-                data={data.filter(item =>
-                    item.PostingAccountName.toLowerCase().includes(searchQuery.toLowerCase())
-                )}
-                ListHeaderComponent={renderHeader}
+        <>
+            <View style={styles.container}>
+                <CustomHeader title={route.params?.title} showBackButton={true} />
+                <Loader visible={isLoading} />
+                {(data.length === 0 && isLoading === false) && (<View style={{ flex: 1, justifyContent: 'center', alignContent: 'center', alignItems: 'center' }}>
+                    <Text >No Data Found</Text>
+                </View>)}
+                {data.length > 0 && (
+                    <>
+                        <FlatList
+                            data={data.filter(item =>
+                                item.PostingAccountName.toLowerCase().includes(searchQuery.toLowerCase())
+                            )}
+                            ListHeaderComponent={renderHeader}
 
-                StickyHeaderComponent={renderHeader}
-                keyExtractor={(item) => item.PostingAccountId.toString()}
-                renderItem={({ item }) => (
-                    <ListItem
-                        title={item.PostingAccountName}
-                        balance={item.ClosingBalance}
-                    />
+                            StickyHeaderComponent={renderHeader}
+                            keyExtractor={(item) => item.PostingAccountId.toString()}
+                            renderItem={({ item }) => (
+                                <ListItem
+                                    title={item.PostingAccountName}
+                                    balance={item.ClosingBalance}
+                                />
+                            )}
+                            keyboardShouldPersistTaps="always" // This prop prevents keyboard from closing
+                        />
+                    </>
                 )}
-                keyboardShouldPersistTaps="always" // This prop prevents keyboard from closing
-            />
-            <Loader visible={isLoading} />
-        </View>
+
+            </View>
+
+        </>
     );
 };
 

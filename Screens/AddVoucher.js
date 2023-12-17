@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, TextInput, ScrollView, KeyboardAvoidingView, Button, StyleSheet, Alert, TouchableOpacity, Text, Modal, FlatList, StatusBar } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, ScrollView, StyleSheet, Alert, TouchableOpacity, Text, Modal, FlatList, StatusBar } from 'react-native';
 import AuthService from '../api/auth-service/auth-service';
 import CustomHeader from '../utilities/navbar';
 import { FontAwesome } from '@expo/vector-icons';
 import { colors, defaultValues } from '../utilities/Constants/constant';
-import Loader from '../utilities/loader'; // Import your Loader component
+import Loader from '../utilities/loader';
 
 const AddVoucher = ({ route }) => {
     const [selectedOption, setSelectedOption] = useState(0);
     const [numberInput, setNumberInput] = useState(0);
+    const [remarks, setRemarks] = useState('');
     const [postingAccounts, setPostingAccounts] = useState([]);
     const [eventType, setEventType] = useState('');
 
@@ -16,6 +17,8 @@ const AddVoucher = ({ route }) => {
     const [searchText, setSearchText] = useState('');
     const [selectedOptionLabel, setSelectedOptionLabel] = useState('');
     const [user, setUser] = useState(null);
+    const [numberInputError, setNumberInputError] = useState('');
+    const [selectedOptionError, setSelectedOptionError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -101,8 +104,28 @@ const AddVoucher = ({ route }) => {
         setSearchText('');
     };
 
+    const validateInputs = () => {
+        let isValid = true;
+
+        if (numberInput == 0) {
+            setNumberInputError('Amount must be greater then 0.');
+            isValid = false;
+        } else {
+            setNumberInputError('');
+        }
+
+        if (selectedOption == 0) {
+            setSelectedOptionError('Select an account');
+            isValid = false;
+        } else {
+            setSelectedOptionError('');
+        }
+
+        return isValid;
+    };
+
     const handleSubmit = async () => {
-        if (numberInput > 0 && selectedOption > 0) {
+        if (validateInputs()) {
             try {
                 loader(true);
                 const token = AuthService.getUser().Token;
@@ -117,7 +140,7 @@ const AddVoucher = ({ route }) => {
                         Id: 0,
                         PostingAccountId: selectedOption,
                         VoucherDate: new Date().toISOString(),
-                        Remarks: `Voucher Added by ${AuthService.getUser()?.UserName}`,
+                        Remarks: remarks,
                         Amount: numberInput,
                         VoucherType: eventType,
                         BranchId: user.BranchId,
@@ -138,12 +161,15 @@ const AddVoucher = ({ route }) => {
                     setNumberInput(0);
                     setSelectedOption(0);
                     setSelectedOptionLabel('');
+                    setRemarks('');
+                    broadcastMessage(`${route.params.eventType === 1 ? 'Payment' : 'Receipt'} voucher is generated.`, token);
                 } else {
-                    Alert.alert("Success", "something went wrong please try add");
+                    Alert.alert("Success", "something went wrong please try again");
                     console.log(data)
                     setSelectedOption(0);
                     setNumberInput(0);
                     setSelectedOptionLabel('');
+                    setRemarks('');
                 }
             } catch (error) {
                 loader(false);
@@ -151,13 +177,21 @@ const AddVoucher = ({ route }) => {
                 Alert.alert("Error", "Failed to add voucher");
             }
         } else {
-            Alert.alert("Error", "Please enter Amount and also select person.");
-            setSelectedOption(0);
             loader(false);
-            setNumberInput(0);
-            setSelectedOptionLabel(null);
         }
     };
+
+    const broadcastMessage = async (message, token) => {
+        // console.log(message);
+        await fetch(`${defaultValues.baseUrl}/Accounts/BroadCastMessage?message=${message}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+    }
+
     return (
         <View >
             <View style={styles.container}>
@@ -171,7 +205,7 @@ const AddVoucher = ({ route }) => {
                         <Text style={styles.pickerTriggerText}>{selectedOptionLabel || "Select Account"}</Text>
                         <FontAwesome name="caret-down" size={20} color={colors.dar} />
                     </TouchableOpacity>
-
+                    {selectedOptionError ? <Text style={styles.errorText}>{selectedOptionError}</Text> : null}
                     {renderPicker()}
 
                     <TextInput
@@ -180,6 +214,15 @@ const AddVoucher = ({ route }) => {
                         value={numberInput.toString()}
                         placeholder="Enter a number"
                         keyboardType="numeric"
+                        placeholderTextColor="#A0A0A0"
+                    />
+                    {numberInputError ? <Text style={styles.errorText}>{numberInputError}</Text> : null}
+                    <TextInput
+                        style={styles.input}
+                        onChangeText={setRemarks}
+                        value={remarks}
+                        placeholder="Enter a Remarks"
+                        keyboardType="default"
                         placeholderTextColor="#A0A0A0"
                     />
 
@@ -235,6 +278,10 @@ const styles = StyleSheet.create({
         flex: 1, // Allow text to grow to the right
         color: colors.dar, // Black text color
     },
+    errorText: {
+        color: colors.danger,
+        marginBottom: 10,
+    },
     input: {
         fontSize: 16,
         padding: 10,
@@ -244,7 +291,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.light,
         color: colors.dar,
         width: '100%',
-        marginBottom: 20,
+        // marginBottom: 20,
         shadowColor: colors.dar,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
@@ -253,6 +300,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     buttonContainer: {
+        marginTop: 20,
         width: '100%',
         borderRadius: 10,
         overflow: 'hidden',

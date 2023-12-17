@@ -52,7 +52,7 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     if (validateInputs()) {
       loader(true);
-      showToast('info', 'Logging in...');
+      showToast('info', 'Logging in...', 5000);
       try {
         Loader(true);
         const response = await fetch(`${defaultValues.baseUrl}/Users/UserLogin`, {
@@ -71,7 +71,7 @@ const LoginScreen = () => {
           if (user?.BranchId > 0) {
             AuthService.setUser(user);
             loader(false);
-            showToast('success', 'Login successful!');
+            showToast('success', 'Login successful!','Login successful!',2000);
             navigation.navigate('Home');
           } else {
             showToast('error', `${user?.Message}`);
@@ -104,14 +104,14 @@ const LoginScreen = () => {
         <TextInput
           value={username}
           onChangeText={(text) => setUsername(text)}
-          placeholder="Enter Your Email"
+          placeholder="Enter Username"
           style={styles.input}
         />
         {usernameError ? <RNText style={styles.errorText}>{usernameError}</RNText> : null}
         <TextInput
           value={password}
           onChangeText={(text) => setPassword(text)}
-          placeholder="Enter Your Password"
+          placeholder="Enter Password"
           secureTextEntry={true}
           style={styles.input}
         />
@@ -119,13 +119,13 @@ const LoginScreen = () => {
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
           <RNText style={styles.buttonText}>LOGIN</RNText>
         </TouchableOpacity>
-        <View style={styles.signupContainer}>
+        {/* <View style={styles.signupContainer}>
           <RNText>Don't have an account?</RNText>
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <RNText style={styles.signupText}>Sign Up</RNText>
           </TouchableOpacity>
-        </View>
-      <Loader visible={isLoading} />
+        </View> */}
+        <Loader visible={isLoading} />
       </View>
     </View>
   );
