@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import LoginScreen from './Screens/LoginScreen';
-import RegisterScreen from './Screens/RegisterScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import HomeScreen from './Screens/HomeScreen';
 import AddVoucher from './Screens/AddVoucher';
+import AddOrder from './Screens/AddOrder';
 import PayablesReceiveables from './Screens/PayablesReceiveables';
 import Toast from 'react-native-toast-message';
 import AuthService from './api/auth-service/auth-service'; // Import your AuthService
@@ -50,6 +50,7 @@ const StackNavigator = () => {
           <>
             <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Voucher" component={AddVoucher} options={{ headerShown: false }} />
+            <Stack.Screen name="Order" component={AddOrder} options={{ headerShown: false }} />
             <Stack.Screen name="PayablesReceiveables" component={PayablesReceiveables} options={{ headerShown: false }} />
             <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           </>
@@ -59,8 +60,8 @@ const StackNavigator = () => {
             <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Voucher" component={AddVoucher} options={{ headerShown: false }} />
+            <Stack.Screen name="Order" component={AddOrder} options={{ headerShown: false }} />
             <Stack.Screen name="PayablesReceiveables" component={PayablesReceiveables} options={{ headerShown: false }} />
-            <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
           </>
         )}
       </Stack.Navigator>
