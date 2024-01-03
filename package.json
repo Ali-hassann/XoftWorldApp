@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.19.8",
+    "@react-native-community/datetimepicker": "^7.6.2",
     "@react-navigation/bottom-tabs": "^6.5.9",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
@@ -53,6 +54,7 @@
     "react": "18.2.0",
     "react-dom": "^18.2.0",
     "react-native": "0.72.6",
+    "react-native-datepicker": "^1.7.2",
     "react-native-exit-app": "^2.0.0",
     "react-native-gesture-handler": "^2.13.4",
     "react-native-picker-select": "^9.0.0",

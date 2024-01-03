@@ -49,7 +49,7 @@ const PayablesReceiveables = ({ route }) => {
                     style={styles.searchInput}
                     value={searchQuery}
                     onChangeText={text => setSearchQuery(text)}
-                    placeholder="Search Posting Account"
+                    placeholder="Search ..."
                     autoFocus={true}
                 />
                 {/* <FontAwesome name="search" size={24} color="black" /> */}
@@ -120,7 +120,7 @@ const PayablesReceiveables = ({ route }) => {
         }, 5000); // Simulated 2-second delay
     };
 
-    const ListItem = ({ title, balance }) => (
+    const ListItem = ({ title, balance, routeName }) => (
         <View style={styles.itemContainer}>
             <View style={styles.iconAndText}>
                 {/* <View style={styles.icon} /> */}
@@ -129,6 +129,11 @@ const PayablesReceiveables = ({ route }) => {
                     <Text style={styles.title}>{title}</Text>
                 </View>
             </View>
+            {routeName?.length > 0 && (
+                <View style={styles.textContainer}>
+                    <Text style={styles.title}>{routeName}</Text>
+                </View>
+            )}
             <Text style={styles.followButtonText}>{balance}</Text>
         </View>
     );
@@ -145,7 +150,8 @@ const PayablesReceiveables = ({ route }) => {
                     <>
                         <FlatList
                             data={data.filter(item =>
-                                item.PostingAccountName.toLowerCase().includes(searchQuery.toLowerCase())
+                                item.PostingAccountName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                item.LocationName.toLowerCase().includes(searchQuery.toLowerCase())
                             )}
                             ListHeaderComponent={renderHeader}
 
@@ -155,6 +161,7 @@ const PayablesReceiveables = ({ route }) => {
                                 <ListItem
                                     title={item.PostingAccountName}
                                     balance={item.ClosingBalance}
+                                    routeName={item.LocationName}
                                 />
                             )}
                             keyboardShouldPersistTaps="always" // This prop prevents keyboard from closing
@@ -197,6 +204,8 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         justifyContent: 'center',
+        maxWidth: 110,
+        minWidth: 100,
     },
     title: {
         fontWeight: '300',

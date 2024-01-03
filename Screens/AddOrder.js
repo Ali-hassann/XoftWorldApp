@@ -7,25 +7,34 @@ import { colors, defaultValues } from '../utilities/Constants/constant';
 import Loader from '../utilities/loader';
 import { Octicons } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
+// import DatePicker from '@react-native-community/datetimepicker';
 
 const AddOrder = ({ route }) => {
     const [eventType, setEventType] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [selectedBrand, setSelectedBrand] = useState('');
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [remarks, setRemarks] = useState('');
+    const [orderDate, setOrderDate] = useState('');
     const [packQuantity, setPackQuantity] = useState(0);
     const [loseQuantity, setLoseQuantity] = useState(0);
+    const [price, setPrice] = useState(0);
     const [customersList, setCustomer] = useState([]);
     const [productList, setProduct] = useState([]);
+    const [filterProductList, setFilterProduct] = useState([]);
     const [saleOrderProductList, setSaleOrderProductList] = useState([]);
 
     const [isCustomerPickerVisible, setCustomerPickerVisible] = useState(false);
+    const [isBrandPickerVisible, setBrandPickerVisible] = useState(false);
     const [isProductPickerVisible, setProductPickerVisible] = useState(false);
     const [customerSearchText, setCustomerSearchText] = useState('');
+    const [brandSearchText, setBrandSearchText] = useState('');
     const [productSearchText, setProductSearchText] = useState('');
     const [user, setUser] = useState(null);
-    const [numberInputError, setNumberInputError] = useState('');
-    const [selectedOptionError, setSelectedOptionError] = useState('');
+    const [loseQuantityError, setLoseQuantityError] = useState('');
+    const [packQuantityError, setPackQuantityError] = useState('');
+    const [selectedCustomerError, setSelectedCustomerError] = useState('');
+    const [selectedProductError, setSelectedProductError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -68,8 +77,8 @@ const AddOrder = ({ route }) => {
 
         const fetchProducts = async () => {
             try {
-                // const token = AuthService.getUser().Token;
 
+                // const token = AuthService.getUser().Token;
                 const response = await fetch(`${defaultValues.baseUrl}/Stock/GetProductList`, {
                     method: 'POST',
                     headers: {
@@ -89,6 +98,7 @@ const AddOrder = ({ route }) => {
                 const products = await response.json();
 
                 setProduct(products);
+                setFilterProduct(products);
             } catch (error) {
                 console.error('Error fetching products:', error);
                 Alert.alert("Error", "Failed to fetch products");
@@ -101,10 +111,46 @@ const AddOrder = ({ route }) => {
         setIsLoading(value);
     };
 
+    const renderBrandPicker = () => {
+        const uniqueBrandNames = [...new Set(productList.map(product => product.CompanyBrandName))];
+
+        // Filter accounts based on search text
+        const filteredBrand = uniqueBrandNames.filter(brand =>
+            brand?.toLowerCase().includes(brandSearchText.toLowerCase())
+        );
+
+        return (
+            <Modal
+                visible={isBrandPickerVisible}
+                animationType="slide"
+                onRequestClose={() => setBrandPickerVisible(false)}
+            >
+                <View style={styles.modalContent}>
+                    <TextInput
+                        style={styles.searchInput}
+                        onChangeText={setBrandSearchText}
+                        value={brandSearchText}
+                        placeholder="Search Brand"
+                        placeholderTextColor="#A0A0A0"
+                    />
+                    <FlatList
+                        data={filteredBrand}
+                        keyExtractor={item => item?.toString()}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => handleBrandSelect(item)}>
+                                <Text style={styles.listItemText}>{item}</Text>
+                            </TouchableOpacity>
+                        )}
+                    />
+                </View>
+            </Modal>
+        );
+    };
+
     const renderCustomerPicker = () => {
         // Filter accounts based on search text
         const filteredCustomer = customersList.filter(customer =>
-            customer?.ParticularName?.toLowerCase().includes(customerSearchText.toLowerCase())
+            customer?.PostingAccountName?.toLowerCase().includes(customerSearchText.toLowerCase())
         );
 
         return (
@@ -126,7 +172,7 @@ const AddOrder = ({ route }) => {
                         keyExtractor={item => item?.ParticularId?.toString()}
                         renderItem={({ item }) => (
                             <TouchableOpacity onPress={() => handleSelect(item)}>
-                                <Text style={styles.listItemText}>{item.ParticularName}</Text>
+                                <Text style={styles.listItemText}>{item.PostingAccountName}</Text>
                             </TouchableOpacity>
                         )}
                     />
@@ -137,7 +183,7 @@ const AddOrder = ({ route }) => {
 
     const renderProductsPicker = () => {
         // Filter accounts based on search text
-        const filteredProduct = productList?.filter(product =>
+        const filteredProduct = filterProductList?.filter(product =>
             product?.ProductName?.toLowerCase().includes(productSearchText.toLowerCase())
         );
 
@@ -169,44 +215,80 @@ const AddOrder = ({ route }) => {
         );
     };
 
+    const handleBrandSelect = (brandName) => {
+        const filterProducts = productList.filter(r => r.CompanyBrandName === brandName);
+        setFilterProduct(filterProducts);
+        setSelectedBrand(brandName); // Update the selected value
+        setBrandPickerVisible(false); // Close the picker modal
+        setBrandSearchText('');
+    };
+
     const handleSelect = (item) => {
         setSelectedCustomer(item); // Update the selected value
         setCustomerPickerVisible(false); // Close the picker modal
         setCustomerSearchText('');
     };
 
+
     const handleProductSelect = (item) => {
         setSelectedProduct(item); // Update the selected value
         setProductPickerVisible(false); // Close the picker modal
         setProductSearchText('');
+        setPrice(item?.SalePrice);
     };
 
-    const validateInputs = () => {
+    const validateSubmit = () => {
         let isValid = true;
 
-        if (packQuantity == 0) {
-            setNumberInputError('Amount must be greater then 0.');
+        if (saleOrderProductList.length == 0) {
+            Alert.alert('Add Products', 'Please select products.');
             isValid = false;
-        } else {
-            setNumberInputError('');
         }
 
         if (selectedCustomer?.ParticularId == 0) {
-            setSelectedOptionError('Select an account');
+            setSelectedCustomerError('Select customer');
             isValid = false;
         } else {
-            setSelectedOptionError('');
+            setSelectedCustomerError('');
+        }
+
+        return isValid;
+    };
+
+    const validateAddProduct = () => {
+        let isValid = true;
+
+        if (packQuantity === 0 && loseQuantity === 0) {
+            setPackQuantityError('Amount must be greater then 0.');
+            setLoseQuantityError('Amount must be greater then 0.');
+            isValid = false;
+        } else {
+            setPackQuantityError('');
+            setLoseQuantityError('');
+        }
+
+        if (!selectedProduct) {
+            setSelectedProductError('Select product');
+            isValid = false;
+        } else {
+            setSelectedProductError('');
+        }
+
+        if (!selectedCustomer) {
+            setSelectedCustomerError('Select customer');
+            isValid = false;
+        } else {
+            setSelectedCustomerError('');
         }
 
         return isValid;
     };
 
     const handleSubmit = async () => {
-        if (validateInputs()) {
+        if (validateSubmit()) {
             try {
                 loader(true);
                 const token = AuthService.getUser().Token;
-                // Replace 'YOUR_API_ENDPOINT' with your actual API endpoint
                 const response = await fetch(`${defaultValues.baseUrl}/Stock/AddSaleOrderList`, {
                     method: 'POST',
                     headers: {
@@ -225,45 +307,52 @@ const AddOrder = ({ route }) => {
                 if (data) {
                     loader(false);
                     Alert.alert("Success", "Order added successfully!");
-                    setPackQuantity(0);
                     setSelectedCustomer(null);
+                    setSaleOrderProductList([]);
                     setRemarks('');
-                    broadcastMessage(`${route.params.eventType === 1 ? 'Payment' : 'Receipt'} voucher is generated.`, token);
+                    broadcastMessage(`Sale order is generated`, token);
                 } else {
                     Alert.alert("Success", "something went wrong please try again");
-                    console.log(data);
-                    setSelectedCustomer(null);
-                    setPackQuantity(0);
-                    setRemarks('');
                 }
             } catch (error) {
                 loader(false);
                 console.error('Error during API call:', error);
-                Alert.alert("Error", "Failed to add voucher");
+                Alert.alert("Error", "Failed to add order");
             }
         } else {
             loader(false);
         }
     };
-
+    // public decimal Amount { get => TotalLoseQuantity * Price; set => _ = value; }
+    // public int TotalLoseQuantity { get => (PackQuantity * QuantityPerPack) + LoseQuantity; set => _ = value; }
     const handleAddProduct = () => {
-        let product = {
-            ProductId: selectedProduct.ProductId,
-            ProductName: selectedProduct.ProductName,
-            PackQuantity: packQuantity,
-            LoseQuantity: loseQuantity,
-            ParticularId: selectedCustomer?.ParticularId,
-            Remarks: remarks,
-            OrgId: AuthService.getUser().OrgId,
-            BranchId: AuthService.getUser().BranchId,
-            // OrderDate: new Date(),
-        };
+        if (validateAddProduct()) {
+            let finalPrice = price > 0 ? price : parseInt(selectedProduct?.SalePrice);
+            let totalLoseQuantity = (packQuantity * selectedProduct?.QuantityPerPack) + loseQuantity;
+            let product = {
+                ProductId: selectedProduct.ProductId,
+                ProductName: selectedProduct.ProductName,
+                QuantityPerPack: selectedProduct.QuantityPerPack,
+                PackQuantity: packQuantity,
+                LoseQuantity: loseQuantity,
+                ParticularId: selectedCustomer?.ParticularId,
+                Remarks: remarks,
+                OrgId: AuthService.getUser().OrgId,
+                BranchId: AuthService.getUser().BranchId,
+                OrderDate: new Date(),
+                Price: finalPrice,
+                Amount: (totalLoseQuantity * finalPrice),
+            };
 
-        setSaleOrderProductList([...saleOrderProductList, product]);
-        setPackQuantity(0);
-        setLoseQuantity(0);
-        setSelectedProduct(null);
-        console.log(saleOrderProductList);
+            setSaleOrderProductList([...saleOrderProductList, product]);
+            setPackQuantity(0);
+            setLoseQuantity(0);
+            setPrice(0);
+            setSelectedProduct(null);
+            console.log(product);
+            console.log(totalLoseQuantity);
+            console.log(finalPrice);
+        }
     };
 
     const broadcastMessage = async (message, token) => {
@@ -277,6 +366,16 @@ const AddOrder = ({ route }) => {
         });
     }
 
+    const showDatePicker = () => {
+        DatePicker.open({
+            date: orderDate,
+            mode: 'date', // Set the mode to 'date' for selecting only date
+            onDateChange: (newDate) => {
+                setOrderDate(newDate);
+            },
+        });
+    };
+
     return (
         <View >
             <View style={styles.container}>
@@ -285,22 +384,46 @@ const AddOrder = ({ route }) => {
             <View style={styles.mainContainer}>
                 <ScrollView>
                     <TouchableOpacity onPress={() => setCustomerPickerVisible(true)} style={styles.pickerTrigger}>
-                        <Text style={styles.pickerTriggerText}>{selectedCustomer?.ParticularName || "Select Customer"}</Text>
+                        <Text style={styles.pickerTriggerText}>{selectedCustomer?.PostingAccountName || "Select customer"}</Text>
                         <FontAwesome name="caret-down" size={20} color={colors.primary} />
                     </TouchableOpacity>
-                    {selectedOptionError ? <Text style={styles.errorText}>{selectedOptionError}</Text> : null}
+                    {selectedCustomerError ? <Text style={styles.errorText}>{selectedCustomerError}</Text> : null}
                     {renderCustomerPicker()}
                     <TextInput
                         style={styles.input}
                         onChangeText={setRemarks}
                         value={remarks}
-                        placeholder="Enter a Remarks"
+                        placeholder="Enter remarks"
                         keyboardType="default"
                         placeholderTextColor="#A0A0A0"
                     />
+                    <TouchableOpacity onPress={() => setBrandPickerVisible(true)} style={styles.pickerTrigger}>
+                        <Text style={styles.pickerTriggerText}>{selectedBrand || "Select brand"}</Text>
+                        <FontAwesome name="caret-down" size={20} color={colors.primary} />
+                    </TouchableOpacity>
+                    {renderBrandPicker()}
 
                     <View style={styles.selectItemRow}>
-                        <View style={styles.col6}>
+                        <View style={[styles.col6, { flex: 8 }]}>
+                            <TouchableOpacity onPress={() => setProductPickerVisible(true)} style={styles.pickerTrigger}>
+                                <Text style={styles.pickerTriggerText}>{selectedProduct?.ProductName || "Select product"}</Text>
+                                <FontAwesome name="caret-down" size={20} color={colors.primary} />
+                            </TouchableOpacity>
+                            {selectedProductError ? <Text style={styles.errorText}>{selectedProductError}</Text> : null}
+                            {renderProductsPicker()}
+                        </View>
+                        <View style={[styles.col6, { flex: 2 }]}>
+                            <View style={styles.addButtonContainer}>
+                                <TouchableOpacity onPress={handleAddProduct} style={styles.addButton}>
+                                    {/* <Text style={styles.buttonText}>Add Product</Text> */}
+                                    <Octicons name="diff-added" size={24} color={colors.light} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                    </View>
+                    <View style={styles.selectItemRow}>
+                        <View style={styles.col4}>
                             <Text>Pack Quantity</Text>
                             <TextInput
                                 style={styles.input}
@@ -310,9 +433,9 @@ const AddOrder = ({ route }) => {
                                 keyboardType="numeric"
                                 placeholderTextColor="#A0A0A0"
                             />
-                            {numberInputError ? <Text style={styles.errorText}>{numberInputError}</Text> : null}
+                            {packQuantityError ? <Text style={styles.errorText}>{packQuantityError}</Text> : null}
                         </View>
-                        <View style={styles.col6}>
+                        <View style={styles.col4}>
                             <Text>Lose Quantity</Text>
                             <TextInput
                                 style={styles.input}
@@ -322,28 +445,19 @@ const AddOrder = ({ route }) => {
                                 keyboardType="numeric"
                                 placeholderTextColor="#A0A0A0"
                             />
-                            {numberInputError ? <Text style={styles.errorText}>{numberInputError}</Text> : null}
+                            {loseQuantityError ? <Text style={styles.errorText}>{loseQuantityError}</Text> : null}
                         </View>
-
-                    </View>
-
-                    <View style={styles.selectItemRow}>
-                        <View style={[styles.col6, { flex: 8 }]}>
-                            <TouchableOpacity onPress={() => setProductPickerVisible(true)} style={styles.pickerTrigger}>
-                                <Text style={styles.pickerTriggerText}>{selectedProduct?.ProductName || "Select Product"}</Text>
-                                <FontAwesome name="caret-down" size={20} color={colors.primary} />
-                            </TouchableOpacity>
-                            {selectedOptionError ? <Text style={styles.errorText}>{selectedOptionError}</Text> : null}
-                            {renderProductsPicker()}
-
-                        </View>
-                        <View style={[styles.col6, { flex: 2 }]}>
-                            <View style={styles.addButtonContainer}>
-                                <TouchableOpacity onPress={handleAddProduct} style={styles.addButton}>
-                                    {/* <Text style={styles.buttonText}>Add Product</Text> */}
-                                    <Octicons name="diff-added" size={24} color={colors.light} />
-                                </TouchableOpacity>
-                            </View>
+                        <View style={styles.col4}>
+                            <Text>Price</Text>
+                            <TextInput
+                                style={styles.input}
+                                onChangeText={setPrice}
+                                value={price.toString()}
+                                placeholder="Enter price"
+                                keyboardType="numeric"
+                                placeholderTextColor="#A0A0A0"
+                            />
+                            {/* {loseQuantityError ? <Text style={styles.errorText}>{loseQuantityError}</Text> : null} */}
                         </View>
 
                     </View>
@@ -357,45 +471,54 @@ const AddOrder = ({ route }) => {
                                     index === 0 ?
                                         <>
                                             <View style={styles.row}>
-                                                <View style={[styles.column, { flex: 3.5 }]}>
+                                                <View style={[styles.column, { flex: 3 }]}>
                                                     <Text style={{ fontWeight: 'bold' }}>Product</Text>
                                                 </View>
-                                                <View style={[styles.column, { flex: 2.5 }]}>
+                                                <View style={[styles.column, { flex: 2 }]}>
                                                     <Text style={{ fontWeight: 'bold' }}>Pack</Text>
                                                 </View>
-                                                <View style={[styles.column, { flex: 2.5 }]}>
+                                                <View style={[styles.column, { flex: 2 }]}>
                                                     <Text style={{ fontWeight: 'bold' }}>Lose</Text>
                                                 </View>
-                                                <View style={[styles.column, { flex: 1.5 }]}>
+                                                <View style={[styles.column, { flex: 2 }]}>
+                                                    <Text style={{ fontWeight: 'bold' }}>Amt</Text>
+                                                </View>
+                                                <View style={[styles.column, { flex: 1 }]}>
                                                     <Text style={{ fontWeight: 'bold' }}>Action</Text>
                                                 </View>
                                             </View>
                                             <View style={styles.row}>
-                                                <View style={[styles.column, { flex: 3.5 }]}>
+                                                <View style={[styles.column, { flex: 3 }]}>
                                                     <Text>{item.ProductName}</Text>
                                                 </View>
-                                                <View style={[styles.column, { flex: 2.5 }]}>
+                                                <View style={[styles.column, { flex: 2 }]}>
                                                     <Text>{item.PackQuantity}</Text>
                                                 </View>
-                                                <View style={[styles.column, { flex: 2.5 }]}>
+                                                <View style={[styles.column, { flex: 2 }]}>
                                                     <Text>{item.LoseQuantity}</Text>
                                                 </View>
-                                                <View style={[styles.column, { flex: 1.5 }]}>
+                                                <View style={[styles.column, { flex: 2 }]}>
+                                                    <Text>{item.Amount}</Text>
+                                                </View>
+                                                <View style={[styles.column, { flex: 1 }]}>
                                                     <Entypo name="trash" size={20} color={colors.danger} />
                                                 </View>
                                             </View>
                                         </> :
                                         <View style={styles.row}>
-                                            <View style={[styles.column, { flex: 3.5 }]}>
+                                            <View style={[styles.column, { flex: 3 }]}>
                                                 <Text>{item.ProductName}</Text>
                                             </View>
-                                            <View style={[styles.column, { flex: 2.5 }]}>
+                                            <View style={[styles.column, { flex: 2 }]}>
                                                 <Text>{item.PackQuantity}</Text>
                                             </View>
-                                            <View style={[styles.column, { flex: 2.5 }]}>
+                                            <View style={[styles.column, { flex: 2 }]}>
                                                 <Text>{item.LoseQuantity}</Text>
                                             </View>
-                                            <View style={[styles.column, { flex: 1.5 }]}>
+                                            <View style={[styles.column, { flex: 2 }]}>
+                                                <Text>{parseInt(item.Amount)}</Text>
+                                            </View>
+                                            <View style={[styles.column, { flex: 1 }]}>
                                                 <Entypo name="trash" size={20} color={colors.danger} />
                                             </View>
                                         </View>
@@ -485,12 +608,14 @@ const styles = StyleSheet.create({
     addButtonContainer: {
         // marginTop: 20,
         width: '100%',
-        borderRadius: 10,
-        overflow: 'hidden',
+        borderRadius: 20,
+        // overflow: 'hidden',
     },
     addButton: {
         backgroundColor: colors.secondary,
-        padding: 15,
+        padding: 5,
+        marginHorizontal: 10,
+        marginTop: 8,
         alignItems: 'center',
         shadowColor: colors.dar,
         shadowOffset: { width: 0, height: 2 },
@@ -551,6 +676,10 @@ const styles = StyleSheet.create({
     },
     col6: {
         width: '49%',
+        marginHorizontal: 2
+    },
+    col4: {
+        width: '32%',
         marginHorizontal: 2
     },
     row: {
