@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Ionicons } from '@expo/vector-icons';
 import AuthService from '../api/auth-service/auth-service';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, StatusBar, TextInput, Button } from 'react-native';
+import { View, Text, StyleSheet, FlatList, StatusBar, TextInput } from 'react-native';
 import CustomHeader from '../utilities/navbar';
 import { defaultValues } from '../utilities/Constants/constant';
 import Loader from '../utilities/loader';
@@ -40,21 +39,6 @@ const PayablesReceiveables = ({ route }) => {
 
     const loader = (value) => {
         setIsLoading(value);
-    };
-
-    const renderHeader = () => {
-        return (
-            <>
-                <TextInput
-                    style={styles.searchInput}
-                    value={searchQuery}
-                    onChangeText={text => setSearchQuery(text)}
-                    placeholder="Search ..."
-                    autoFocus={true}
-                />
-                {/* <FontAwesome name="search" size={24} color="black" /> */}
-            </>
-        );
     };
 
     const getConfigData = async () => {
@@ -129,8 +113,6 @@ const PayablesReceiveables = ({ route }) => {
         return (
             <View style={styles.itemContainer}>
                 <View style={styles.iconAndText}>
-                    {/* <View style={styles.icon} /> */}
-                    {/* <Ionicons style={{ marginRight: 5 }} name="person-sharp" size={20} color="gray" /> */}
                     <View style={styles.textContainer}>
                         <Text style={styles.title}>{item.PostingAccountName}</Text>
                     </View>
@@ -142,38 +124,6 @@ const PayablesReceiveables = ({ route }) => {
                 )}
                 <Text style={styles.followButtonText}>{item.ClosingBalance}</Text>
             </View>
-        );
-    };
-
-    const renderCustomerPicker = () => {
-        // Filter accounts based on search text
-        const filteredCustomer = data.filter(item => item.PostingAccountName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.LocationName.toLowerCase().includes(searchQuery.toLowerCase()));
-
-        return (
-            <Modal
-                visible={true}
-                animationType="slide"
-            >
-                <View style={styles.modalContent}>
-                    <TextInput
-                        style={styles.searchInput}
-                        onChangeText={setSearchQuery}
-                        value={searchQuery}
-                        placeholder="Search ..."
-                        placeholderTextColor="#A0A0A0"
-                    />
-                    <FlatList
-                        data={filteredCustomer}
-                        keyExtractor={item => item?.PostingAccountId?.toString()}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity onPress={() => handleSelect(item)}>
-                                <Text style={styles.listItemText}>{item.PostingAccountName}</Text>
-                            </TouchableOpacity>
-                        )}
-                    />
-                </View>
-            </Modal>
         );
     };
 
