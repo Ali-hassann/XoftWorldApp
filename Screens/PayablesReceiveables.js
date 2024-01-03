@@ -120,23 +120,62 @@ const PayablesReceiveables = ({ route }) => {
         }, 5000); // Simulated 2-second delay
     };
 
-    const ListItem = ({ title, balance, routeName }) => (
-        <View style={styles.itemContainer}>
-            <View style={styles.iconAndText}>
-                {/* <View style={styles.icon} /> */}
-                <Ionicons style={{ marginRight: 5 }} name="person-sharp" size={20} color="gray" />
-                <View style={styles.textContainer}>
-                    <Text style={styles.title}>{title}</Text>
+    const ListItem = ({ item }) => {
+        console.log(item.PostingAccountName);
+        if (!item.PostingAccountName?.toLowerCase().includes(searchQuery?.toLowerCase()) && searchQuery?.length > 0) {
+            return null; // Don't render the item if it doesn't match the search
+        }
+
+        return (
+            <View style={styles.itemContainer}>
+                <View style={styles.iconAndText}>
+                    {/* <View style={styles.icon} /> */}
+                    {/* <Ionicons style={{ marginRight: 5 }} name="person-sharp" size={20} color="gray" /> */}
+                    <View style={styles.textContainer}>
+                        <Text style={styles.title}>{item.PostingAccountName}</Text>
+                    </View>
                 </View>
+                {item.LocationName?.length > 0 && (
+                    <View style={styles.textContainer}>
+                        <Text style={styles.title}>{item.LocationName}</Text>
+                    </View>
+                )}
+                <Text style={styles.followButtonText}>{item.ClosingBalance}</Text>
             </View>
-            {routeName?.length > 0 && (
-                <View style={styles.textContainer}>
-                    <Text style={styles.title}>{routeName}</Text>
+        );
+    };
+
+    const renderCustomerPicker = () => {
+        // Filter accounts based on search text
+        const filteredCustomer = data.filter(item => item.PostingAccountName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.LocationName.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        return (
+            <Modal
+                visible={true}
+                animationType="slide"
+            >
+                <View style={styles.modalContent}>
+                    <TextInput
+                        style={styles.searchInput}
+                        onChangeText={setSearchQuery}
+                        value={searchQuery}
+                        placeholder="Search ..."
+                        placeholderTextColor="#A0A0A0"
+                    />
+                    <FlatList
+                        data={filteredCustomer}
+                        keyExtractor={item => item?.PostingAccountId?.toString()}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => handleSelect(item)}>
+                                <Text style={styles.listItemText}>{item.PostingAccountName}</Text>
+                            </TouchableOpacity>
+                        )}
+                    />
                 </View>
-            )}
-            <Text style={styles.followButtonText}>{balance}</Text>
-        </View>
-    );
+            </Modal>
+        );
+    };
 
     return (
         <>
@@ -146,31 +185,23 @@ const PayablesReceiveables = ({ route }) => {
                 {(data.length === 0 && isLoading === false) && (<View style={{ flex: 1, justifyContent: 'center', alignContent: 'center', alignItems: 'center' }}>
                     <Text >No Data Found</Text>
                 </View>)}
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search..."
+                    onChangeText={setSearchQuery}
+                    value={searchQuery}
+                />
                 {data.length > 0 && (
                     <>
                         <FlatList
-                            data={data.filter(item =>
-                                item.PostingAccountName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                item.LocationName.toLowerCase().includes(searchQuery.toLowerCase())
-                            )}
-                            ListHeaderComponent={renderHeader}
-
-                            StickyHeaderComponent={renderHeader}
+                            data={data}
                             keyExtractor={(item) => item.PostingAccountId.toString()}
-                            renderItem={({ item }) => (
-                                <ListItem
-                                    title={item.PostingAccountName}
-                                    balance={item.ClosingBalance}
-                                    routeName={item.LocationName}
-                                />
-                            )}
+                            renderItem={ListItem}
                             keyboardShouldPersistTaps="always" // This prop prevents keyboard from closing
                         />
                     </>
                 )}
-
             </View>
-
         </>
     );
 };
