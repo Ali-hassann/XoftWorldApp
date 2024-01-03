@@ -105,7 +105,6 @@ const PayablesReceiveables = ({ route }) => {
     };
 
     const ListItem = ({ item }) => {
-        console.log(item.PostingAccountName);
         if (!item.PostingAccountName?.toLowerCase().includes(searchQuery?.toLowerCase()) && searchQuery?.length > 0) {
             return null; // Don't render the item if it doesn't match the search
         }
